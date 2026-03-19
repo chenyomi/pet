@@ -1,0 +1,24 @@
+def googleMirror = 'https://maven.aliyun.com/repository/google'
+def centralMirror = 'https://maven.aliyun.com/repository/public'
+def pluginMirror = 'https://maven.aliyun.com/repository/gradle-plugin'
+
+def addMirrorRepo = { repositories, String url ->
+    def exists = repositories.find { repo ->
+        repo.hasProperty('url') && repo.url?.toString() == url
+    }
+    if (!exists) {
+        repositories.maven { repo ->
+            repo.url = uri(url)
+        }
+    }
+}
+
+settingsEvaluated { settings ->
+    addMirrorRepo(settings.pluginManagement.repositories, googleMirror)
+    addMirrorRepo(settings.pluginManagement.repositories, centralMirror)
+    addMirrorRepo(settings.pluginManagement.repositories, pluginMirror)
+
+    addMirrorRepo(settings.dependencyResolutionManagement.repositories, googleMirror)
+    addMirrorRepo(settings.dependencyResolutionManagement.repositories, centralMirror)
+    addMirrorRepo(settings.dependencyResolutionManagement.repositories, pluginMirror)
+}
