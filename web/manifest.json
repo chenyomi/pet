@@ -1,11 +1,11 @@
 {
-    "name": "flutter_pet",
-    "short_name": "flutter_pet",
+    "name": "YooPet",
+    "short_name": "YooPet",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "description": "YooPet digital pet game.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

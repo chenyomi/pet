@@ -1,5 +1,7 @@
 import 'dart:io';
 
+import 'package:path_provider/path_provider.dart';
+
 import 'pet_store_stub.dart';
 
 PetStore createPetStore() => _FilePetStore();
@@ -7,7 +9,7 @@ PetStore createPetStore() => _FilePetStore();
 class _FilePetStore implements PetStore {
   @override
   Future<String?> read() async {
-    final file = _saveFile;
+    final file = await _saveFile;
     if (!await file.exists()) {
       return null;
     }
@@ -16,14 +18,13 @@ class _FilePetStore implements PetStore {
 
   @override
   Future<void> write(String value) async {
-    final file = _saveFile;
+    final file = await _saveFile;
     await file.parent.create(recursive: true);
     await file.writeAsString(value);
   }
 
-  File get _saveFile {
-    final home = Platform.environment['HOME'];
-    final base = home != null ? Directory(home) : Directory.current;
-    return File('${base.path}/.digi_pet_flutter_save.json');
+  Future<File> get _saveFile async {
+    final dir = await getApplicationSupportDirectory();
+    return File('${dir.path}/digi_pet_save.json');
   }
 }

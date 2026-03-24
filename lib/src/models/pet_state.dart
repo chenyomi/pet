@@ -83,6 +83,8 @@ class PetSnapshot {
     required this.exploreCharges,
     required this.battleCharges,
     required this.restartUnlocked,
+    required this.unlockedBackgroundIds,
+    required this.activeBackgroundId,
     required this.sleepEndsAt,
     required this.forcedNextSpeciesId,
   });
@@ -93,9 +95,14 @@ class PetSnapshot {
     DateTime? now,
     List<String>? discovered,
     List<String>? usedCodes,
+    List<String>? unlockedBackgroundIds,
+    String? activeBackgroundId,
   }) {
     final created = now ?? DateTime.now();
     final dex = <String>{'egg', ...(discovered ?? const <String>[])}.toList();
+    const defaultBackgroundId = 'meadow_day';
+    final unlocked = <String>{defaultBackgroundId, ...(unlockedBackgroundIds ?? const <String>[])}
+        .toList();
     return PetSnapshot(
       speciesId: 'egg',
       age: 0,
@@ -125,6 +132,9 @@ class PetSnapshot {
       exploreCharges: PetEngine.maxExploreCharges,
       battleCharges: PetEngine.maxBattleCharges,
       restartUnlocked: false,
+      unlockedBackgroundIds: unlocked,
+      activeBackgroundId:
+          unlocked.contains(activeBackgroundId) ? (activeBackgroundId ?? defaultBackgroundId) : defaultBackgroundId,
       sleepEndsAt: null,
       forcedNextSpeciesId: null,
     );
@@ -139,6 +149,11 @@ class PetSnapshot {
     final usedCodes = ((json['usedCodes'] as List?) ?? const <dynamic>[])
         .map((item) => '$item')
         .toList();
+    final unlockedBackgroundIds = <String>{
+      'meadow_day',
+      ...((json['unlockedBackgroundIds'] as List?) ?? const <dynamic>[]).map((item) => '$item'),
+    }.toList();
+    final requestedBackgroundId = json['activeBackgroundId'] as String? ?? 'meadow_day';
     return PetSnapshot(
       speciesId: json['speciesId'] as String? ?? 'egg',
       age: (json['age'] as num?)?.toInt() ?? 0,
@@ -176,6 +191,10 @@ class PetSnapshot {
       exploreCharges: (json['exploreCharges'] as num?)?.toInt() ?? PetEngine.maxExploreCharges,
       battleCharges: (json['battleCharges'] as num?)?.toInt() ?? PetEngine.maxBattleCharges,
       restartUnlocked: json['restartUnlocked'] as bool? ?? false,
+      unlockedBackgroundIds: unlockedBackgroundIds,
+      activeBackgroundId: unlockedBackgroundIds.contains(requestedBackgroundId)
+          ? requestedBackgroundId
+          : 'meadow_day',
       sleepEndsAt: json['sleepEndsAt'] == null ? null : _parseDateTime(json['sleepEndsAt'], now),
       forcedNextSpeciesId: json['forcedNextSpeciesId'] as String?,
     );
@@ -209,6 +228,8 @@ class PetSnapshot {
   final int exploreCharges;
   final int battleCharges;
   final bool restartUnlocked;
+  final List<String> unlockedBackgroundIds;
+  final String activeBackgroundId;
   final DateTime? sleepEndsAt;
   final String? forcedNextSpeciesId;
 
@@ -242,6 +263,8 @@ class PetSnapshot {
       'exploreCharges': exploreCharges,
       'battleCharges': battleCharges,
       'restartUnlocked': restartUnlocked,
+      'unlockedBackgroundIds': unlockedBackgroundIds,
+      'activeBackgroundId': activeBackgroundId,
       'sleepEndsAt': sleepEndsAt?.toIso8601String(),
       'forcedNextSpeciesId': forcedNextSpeciesId,
     };
@@ -276,6 +299,8 @@ class PetSnapshot {
     int? exploreCharges,
     int? battleCharges,
     bool? restartUnlocked,
+    List<String>? unlockedBackgroundIds,
+    String? activeBackgroundId,
     Object? sleepEndsAt = _unset,
     Object? forcedNextSpeciesId = _unset,
   }) {
@@ -308,6 +333,8 @@ class PetSnapshot {
       exploreCharges: exploreCharges ?? this.exploreCharges,
       battleCharges: battleCharges ?? this.battleCharges,
       restartUnlocked: restartUnlocked ?? this.restartUnlocked,
+      unlockedBackgroundIds: unlockedBackgroundIds ?? this.unlockedBackgroundIds,
+      activeBackgroundId: activeBackgroundId ?? this.activeBackgroundId,
       sleepEndsAt: identical(sleepEndsAt, _unset) ? this.sleepEndsAt : sleepEndsAt as DateTime?,
       forcedNextSpeciesId: identical(forcedNextSpeciesId, _unset)
           ? this.forcedNextSpeciesId
@@ -328,10 +355,10 @@ class PetEngine {
 
   final Random _random;
 
-  static const hatchDuration = Duration(minutes: 2);
-  static const decayTurn = Duration(seconds: 20);
-  static const exploreRefill = Duration(minutes: 2);
-  static const battleRefill = Duration(minutes: 3);
+  static const hatchDuration = Duration(minutes: 3);
+  static const decayTurn = Duration(minutes: 5);
+  static const exploreRefill = Duration(minutes: 30);
+  static const battleRefill = Duration(minutes: 45);
   static const maxExploreCharges = 3;
   static const maxBattleCharges = 2;
 
@@ -349,14 +376,14 @@ class PetEngine {
   };
 
   static const actionCooldowns = {
-    PetAction.feed: Duration(seconds: 18),
-    PetAction.train: Duration(seconds: 45),
-    PetAction.explore: Duration(seconds: 70),
-    PetAction.clean: Duration(seconds: 10),
-    PetAction.rest: Duration(seconds: 30),
-    PetAction.battle: Duration(seconds: 95),
-    PetAction.praise: Duration(seconds: 25),
-    PetAction.medicine: Duration(seconds: 60),
+    PetAction.feed: Duration(minutes: 5),
+    PetAction.train: Duration(minutes: 10),
+    PetAction.explore: Duration(minutes: 20),
+    PetAction.clean: Duration(minutes: 2),
+    PetAction.rest: Duration(minutes: 5),
+    PetAction.battle: Duration(minutes: 25),
+    PetAction.praise: Duration(minutes: 8),
+    PetAction.medicine: Duration(minutes: 12),
   };
 
   static const stageNames = {
@@ -706,17 +733,28 @@ class PetEngine {
       );
     }
 
+    // 到点自动孵化，避免必须手动点击“孵化”。
+    final speciesBeforeResolve = speciesOf(next);
+    if (speciesBeforeResolve.stage == PetStage.egg && !now.isBefore(next.hatchReadyAt)) {
+      next = _handleHatch(next, now).copyWith(lastAction: PetAction.hatch);
+    }
+
     final elapsed = now.difference(next.lastDecayAt);
-    final turns = elapsed.isNegative ? 0 : elapsed.inSeconds ~/ decayTurn.inSeconds;
+    // 最多补算 24 小时（288 个 5 分钟回合），超出部分进入保护状态
+    const maxOfflineTurns = 288;
+    var turns = elapsed.isNegative ? 0 : elapsed.inSeconds ~/ decayTurn.inSeconds;
+    final bool longAbsence = elapsed.inMinutes > 60;
+    if (turns > maxOfflineTurns) turns = maxOfflineTurns;
     if (turns <= 0) return next;
 
     final species = speciesOf(next);
-    var hungerLoss = (next.sleeping ? 2.0 : 5.0) * turns;
+    var hungerLoss = (next.sleeping ? 1.5 : 5.0) * turns;
     var moodLoss = 3.0 * turns;
-    var energyDelta = (next.sleeping ? 7.0 : -4.0) * turns;
-    var cleanLoss = 4.0 * turns;
-    var disciplineLoss = 1.0 * turns;
-    var addedPoop = turns ~/ 3;
+    var energyDelta = (next.sleeping ? 9.0 : -3.0) * turns;
+    var disciplineLoss = 0.5 * turns;
+    var addedPoop = turns ~/ 6;
+    // 卫生由便便事件驱动，不随时间自动衰减
+    var cleanLoss = addedPoop * 10.0;
 
     if (species.stage == PetStage.egg) {
       hungerLoss = 0;
@@ -739,6 +777,15 @@ class PetEngine {
       eventText: next.sleeping ? '休息中' : '平静',
     );
 
+    // 长时间离开后的返回叙事
+    if (longAbsence && species.stage != PetStage.egg && next.alive) {
+      final awayMin = elapsed.inMinutes.clamp(0, 24 * 60);
+      final awayStr = awayMin >= 60
+          ? '${awayMin ~/ 60} 小时${awayMin % 60 > 0 ? ' ${awayMin % 60} 分钟' : ''}'
+          : '$awayMin 分钟';
+      next = _pushLog(next, '${species.name} 独自等候了 $awayStr，看到你回来，它动了动。');
+    }
+
     if (_needsSickness(next)) {
       next = next.copyWith(sick: true, eventText: '状态不佳');
     }
@@ -747,7 +794,7 @@ class PetEngine {
       next = next.copyWith(careMistakes: next.careMistakes + 1);
     }
 
-    if (next.careMistakes >= 6 || (next.sick && _criticalValues(next) >= 3)) {
+    if (next.careMistakes >= 8 || (next.sick && _criticalValues(next) >= 3)) {
       next = _pushLog(
         next.copyWith(alive: false, sleeping: false, sleepEndsAt: null, eventText: '已离开'),
         '你的宠物因为长期没有被好好照顾，离开了。',
@@ -913,6 +960,8 @@ class PetEngine {
         now: now,
         discovered: resolved.discovered,
         usedCodes: resolved.usedCodes,
+        unlockedBackgroundIds: resolved.unlockedBackgroundIds,
+        activeBackgroundId: resolved.activeBackgroundId,
       ).copyWith(
         logs: [
           '重启舱已执行，新的数码蛋正在孵化。',
@@ -951,7 +1000,7 @@ class PetEngine {
       next = next.copyWith(careMistakes: next.careMistakes + 1);
     }
 
-    if (next.careMistakes >= 6) {
+    if (next.careMistakes >= 8) {
       next = _pushLog(
         next.copyWith(alive: false, eventText: '已离开'),
         '照顾失误太多了，它没能坚持下来。',
@@ -1032,6 +1081,7 @@ class PetEngine {
         age: 0,
         discovered: _remember(state.discovered, baby.id),
         forcedNextSpeciesId: null,
+        lastDecayAt: now,
         eventText: '破壳成功',
       ),
       '蛋壳裂开了，你得到了 ${baby.name}。',
@@ -1132,7 +1182,7 @@ class PetEngine {
     return _pushLog(
       state.copyWith(
         sleeping: true,
-        sleepEndsAt: now.add(const Duration(seconds: 45)),
+        sleepEndsAt: now.add(const Duration(minutes: 30)),
         energy: _clamp(state.energy + 8),
         eventText: '准备睡觉',
       ),
@@ -1196,9 +1246,9 @@ class PetEngine {
     if (!current.alive) return current;
 
     if (species.stage == PetStage.baby &&
-        current.age >= 3 &&
-        current.power >= 26 &&
-        current.discipline >= 32) {
+        current.age >= 12 &&
+        current.power >= 28 &&
+        current.discipline >= 35) {
       final evolved = _pickRookie(current);
       return _pushLog(
         current.copyWith(
@@ -1211,9 +1261,9 @@ class PetEngine {
     }
 
     if (species.stage == PetStage.rookie &&
-        current.age >= 8 &&
-        current.power >= 56 &&
-        current.wins >= 2) {
+        current.age >= 30 &&
+        current.power >= 60 &&
+        current.wins >= 3) {
       final evolved = _pickChampion(current);
       return _pushLog(
         current.copyWith(
@@ -1226,9 +1276,9 @@ class PetEngine {
     }
 
     if (species.stage == PetStage.champion &&
-        current.age >= 14 &&
-        current.power >= 82 &&
-        current.wins >= 5 &&
+        current.age >= 60 &&
+        current.power >= 85 &&
+        current.wins >= 8 &&
         current.careMistakes <= 3) {
       final evolved = _pickUltimate(current);
       return _pushLog(
@@ -1377,7 +1427,7 @@ class PetEngine {
 
   PetSnapshot _pushLog(PetSnapshot state, String text) {
     final updated = [text, ...state.logs];
-    return state.copyWith(logs: updated.take(10).toList());
+    return state.copyWith(logs: updated.take(20).toList());
   }
 
   double _clamp(double value) => value.clamp(0, 100).toDouble();
