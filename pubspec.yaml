@@ -20,3 +20,5 @@ flutter:
   uses-material-design: true
   assets:
     - assets/logo/
+    - assets/pixellab/
+    - assets/pixellab/official_line/

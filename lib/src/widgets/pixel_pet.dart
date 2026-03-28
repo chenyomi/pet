@@ -14,23 +14,30 @@ class PixelPet extends StatelessWidget {
   final PetMood mood;
   final double size;
 
+  static const Map<String, String> _pixellabSouthAssetBySpeciesId = {
+    'egg': 'assets/pixellab/official_line/egg.png',
+    'bubble': 'assets/pixellab/official_line/baby.png',
+    'sunbit': 'assets/pixellab/official_line/rookie.png',
+    'halo': 'assets/pixellab/official_line/ultimate.png',
+  };
+
   static const Map<String, List<String>> _bodies = {
     'egg': [
       '................',
-      '......xxxx......',
-      '....xxxxxxxx....',
-      '...xxxxxxxxxx...',
-      '..xxxxxxxxxxxx..',
-      '..xxxxxxxxxxxx..',
-      '.xxxxxxxxxxxxxx.',
-      '.xxxxxxxxxxxxxx.',
-      '.xxxxxxxxxxxxxx.',
-      '.xxxxxxxxxxxxxx.',
-      '..xxxxxxxxxxxx..',
-      '..xxxxxxxxxxxx..',
-      '...xxxxxxxxxx...',
-      '....xxxxxxxx....',
-      '......xxxx......',
+      '......iiii......',
+      '....iibbbbii....',
+      '...iibbbbbbii...',
+      '..iibbbbbbbbii..',
+      '..ixbbbbbbbbxi..',
+      '.iixbbbbssbbxii.',
+      '.iixbbssbbssxii.',
+      '.iixbssbbbbsxii.',
+      '.iixssbbbbssxii.',
+      '..ixsbbbbbbsxi..',
+      '...iixbbbbii....',
+      '....iixxxii.....',
+      '......iiii......',
+      '................',
       '................',
     ],
     'blob': [
@@ -159,10 +166,162 @@ class PixelPet extends StatelessWidget {
       '................',
       '................',
     ],
+    'flame_baby': [
+      '......ss........',
+      '.....sxxs.......',
+      '....ixxxxi......',
+      '...ixbbbbxi.....',
+      '..iixbbbbxxii...',
+      '..ixxbbbbxxxi...',
+      '..ixxxxxssxxi...',
+      '..ixxxxxxxxxi...',
+      '...ixxxiixxxi...',
+      '...ix......xi...',
+      '..ii......ii....',
+      '................',
+      '................',
+      '................',
+      '................',
+      '................',
+    ],
+    'flame_rookie': [
+      '....sii..iis....',
+      '...isxxiixxsi...',
+      '..isxxxxxxxxsi..',
+      '.isxxxxbbbxxxxsi',
+      '.ixxxxxbbbxxxxi.',
+      '.ixxxxxxxssxxxi.',
+      '..ixxxxxxxxxxi..',
+      '..ixxxxiixxxxi..',
+      '..sxi......ixs..',
+      '...ii......ii...',
+      '...i........i...',
+      '................',
+      '................',
+      '................',
+      '................',
+      '................',
+    ],
+    'flame_champion': [
+      '..sii......iis..',
+      '.isxxii..iixxsi.',
+      'isxxxxxxxxxxxxsi',
+      'ixxxxbbbbbbxxxxi',
+      'ixxxxxbbbbxxxxxi',
+      '.ixxxxssssssxxi.',
+      '..ixxxxxxxxxxi..',
+      '..sxxxiiiixxxs..',
+      '.ssxi......ixss.',
+      '.ii........ii...',
+      '..i........i....',
+      '................',
+      '................',
+      '................',
+      '................',
+      '................',
+    ],
+    'star_baby': [
+      '......ss........',
+      '.....sxxs.......',
+      '....ixxxxi......',
+      '...isxbbxsi.....',
+      '...ixxbbbxxi....',
+      '..isxxbbxxsi....',
+      '..sxxxxxxxxs....',
+      '...sxxiixxs.....',
+      '....i......i....',
+      '...ii......ii...',
+      '................',
+      '................',
+      '................',
+      '................',
+      '................',
+      '................',
+    ],
+    'star_rookie': [
+      '....ss....ss....',
+      '...isxi..ixsi...',
+      '..isxxxiixxxsi..',
+      '.isxxxxbbxxxxsi.',
+      '.ixxxxxbbbxxxxi.',
+      '..ixxxxbbbbxxi..',
+      '..sxxxxxxxxxxs..',
+      '...sxxxiixxxs...',
+      '....ii....ii....',
+      '...ii......ii...',
+      '................',
+      '................',
+      '................',
+      '................',
+      '................',
+      '................',
+    ],
+    'shade_baby': [
+      '.......s........',
+      '......isi.......',
+      '....iixxxii.....',
+      '...ixxxxxxxi....',
+      '..ixxbbbbxxi....',
+      '..ixxxxxxxxi....',
+      '..ixxxxxxxxi....',
+      '...ixxxxxxi.....',
+      '...sxx..xxs.....',
+      '..sxx....xxs....',
+      '................',
+      '................',
+      '................',
+      '................',
+      '................',
+      '................',
+    ],
+    'shade_rookie': [
+      '.....s....s.....',
+      '...isxi..ixsi...',
+      '..isxxxxxxsi....',
+      '..ixxbbbbxxi....',
+      '.ixxxxxxxxxxxi..',
+      '.ixxxxxxxxxxxi..',
+      '..ixxx....xxxi..',
+      '..sxxs....sxxs..',
+      '.sxx........xxs.',
+      '................',
+      '................',
+      '................',
+      '................',
+      '................',
+      '................',
+      '................',
+    ],
+    'shade_champion': [
+      '...s........s...',
+      '.isxi......ixsi.',
+      'isxxxxi..ixxxxsi',
+      '.ixxxxxxbbxxxxi.',
+      '.ixxxxxxxxxxxxi.',
+      '..ixxxxxxxxxxi..',
+      '..sxxx....xxxs..',
+      '.sxxs......sxxs.',
+      'sxx..........xxs',
+      '................',
+      '................',
+      '................',
+      '................',
+      '................',
+      '................',
+      '................',
+    ],
   };
 
   static const Map<String, List<Offset>> _traits = {
     'cheek': [Offset(3, 8), Offset(12, 8)],
+    'crack': [
+      Offset(6, 3),
+      Offset(7, 4),
+      Offset(8, 5),
+      Offset(9, 6),
+      Offset(10, 7),
+      Offset(9, 8),
+    ],
     'horn': [Offset(4, 2), Offset(11, 2)],
     'wing': [
       Offset(1, 7),
@@ -186,6 +345,19 @@ class PixelPet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final pixellabAsset = _pixellabSouthAssetBySpeciesId[species.id];
+    if (pixellabAsset != null) {
+      return SizedBox(
+        width: size,
+        height: size,
+        child: Image.asset(
+          pixellabAsset,
+          fit: BoxFit.contain,
+          filterQuality: FilterQuality.none,
+        ),
+      );
+    }
+
     return SizedBox(
       width: size,
       height: size,
@@ -219,20 +391,29 @@ class _PixelPetPainter extends CustomPainter {
 
     for (var y = 0; y < rows; y++) {
       for (var x = 0; x < columns; x++) {
-        if (bodyRows[y][x] != 'x') continue;
+        final symbol = bodyRows[y][x];
+        if (symbol == '.') continue;
         final rect = Rect.fromLTWH(x * cell, y * cell, cell, cell);
-        final color = y < 5
-            ? Color.lerp(primary, Colors.white, 0.18)!
-            : y > 10
-                ? secondary
-                : primary;
+        final color = _colorForSymbol(
+          symbol,
+          x,
+          y,
+          bodyRows,
+          primary,
+          secondary,
+          ink,
+        );
         canvas.drawRect(rect, Paint()..color = color);
       }
     }
 
     for (final trait in species.traits) {
       final points = PixelPet._traits[trait] ?? const <Offset>[];
-      final traitColor = trait == 'cheek' ? cheek : secondary;
+      final traitColor = switch (trait) {
+        'cheek' => cheek,
+        'crack' => secondary,
+        _ => secondary,
+      };
       for (final point in points) {
         _drawCell(canvas, point.dx.toInt(), point.dy.toInt(), cell, traitColor);
       }
@@ -241,6 +422,49 @@ class _PixelPetPainter extends CustomPainter {
     for (final point in _facePoints(species.face, mood)) {
       _drawCell(canvas, point.dx.toInt(), point.dy.toInt(), cell, ink);
     }
+  }
+
+  Color _colorForSymbol(
+    String symbol,
+    int x,
+    int y,
+    List<String> rows,
+    Color primary,
+    Color secondary,
+    Color ink,
+  ) {
+    final isSolid = symbol != '.';
+    final outlined = isSolid && _isOutlineCell(rows, x, y);
+    if (outlined) return ink;
+
+    return switch (symbol) {
+      'x' => y < 5
+          ? Color.lerp(primary, Colors.white, 0.18)!
+          : y > 10
+              ? secondary
+              : _isBellyZone(x, y)
+                  ? Color.lerp(primary, Colors.white, 0.52)!
+                  : primary,
+      's' => secondary,
+      'b' => Color.lerp(primary, Colors.white, 0.72)!,
+      'i' => ink,
+      _ => primary,
+    };
+  }
+
+  bool _isBellyZone(int x, int y) {
+    return x >= 5 && x <= 10 && y >= 6 && y <= 10;
+  }
+
+  bool _isOutlineCell(List<String> rows, int x, int y) {
+    bool solidAt(int px, int py) {
+      if (py < 0 || py >= rows.length) return false;
+      if (px < 0 || px >= rows[py].length) return false;
+      return rows[py][px] != '.';
+    }
+
+    // 4-neighbor contour gives a clean pixel outline for legacy bodies.
+    return !solidAt(x - 1, y) || !solidAt(x + 1, y) || !solidAt(x, y - 1) || !solidAt(x, y + 1);
   }
 
   List<Offset> _facePoints(String face, PetMood mood) {

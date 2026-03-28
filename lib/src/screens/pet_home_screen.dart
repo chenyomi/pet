@@ -87,7 +87,7 @@ const _backgroundCatalog = <_GameBackground>[
     id: 'cloud_summit',
     name: '云巅神殿',
     tagline: '进化里程碑',
-    description: '只有成熟进化体才能登上的高空神殿，风声像远古战鼓。',
+    description: '只有完成关键进化的灵兽才能踏上的高空神殿，圣轮与风纹终日回响。',
     unlockHint: '宠物达到成熟期',
     icon: Icons.terrain_rounded,
     gradient: [Color(0xFFC6D6FF), Color(0xFF7FA1E5)],
@@ -369,7 +369,7 @@ class _PetHomeScreenState extends State<PetHomeScreen> {
                 ),
                 const SizedBox(height: 8),
                 const Text(
-                  '图鉴包含全部进化阶段。每只宠物卡片会显示可进化方向（具体结果取决于养成数据）。',
+                  '图鉴按新的世界观收录全部形态。每张卡片会显示下一阶段的主要演化去向，用来观察各分支的轮廓遗传。',
                   style: TextStyle(fontSize: 13, color: Color(0xFF5A4A2A)),
                 ),
                 const SizedBox(height: 14),
@@ -1723,10 +1723,10 @@ class _DexPetCard extends StatelessWidget {
     final stageName = PetEngine.stageNames[species.stage] ?? '';
     final previewNames = evolvesTo.take(4).map((s) => s.name).join(' / ');
     final evolveText = evolvesTo.isEmpty
-        ? '终极形态'
+        ? '终极形态 · 已到该分支顶点'
         : evolvesTo.length <= 4
-            ? '可进化：$previewNames'
-            : '可进化：$previewNames 等 ${evolvesTo.length} 种';
+            ? '下一阶段：$previewNames'
+            : '下一阶段：$previewNames 等 ${evolvesTo.length} 种';
 
     Widget petView = _FloatingPetWidget(
       species: species,
@@ -1734,18 +1734,9 @@ class _DexPetCard extends StatelessWidget {
       size: 86,
     );
     if (!unlocked) {
-      // 保留部分色彩，只降低饱和度与亮度，避免“全黑白”。
       petView = Opacity(
-        opacity: 0.86,
-        child: ColorFiltered(
-          colorFilter: const ColorFilter.matrix([
-            0.55, 0.35, 0.10, 0, 8,
-            0.20, 0.65, 0.15, 0, 8,
-            0.12, 0.30, 0.58, 0, 8,
-            0, 0, 0, 1, 0,
-          ]),
-          child: petView,
-        ),
+        opacity: 0.92,
+        child: petView,
       );
     }
 
@@ -2114,6 +2105,270 @@ class _ScenePatternPainter extends CustomPainter {
             );
           }
         }
+    }
+
+    _drawSceneProps(canvas, size);
+  }
+
+  void _drawSceneProps(Canvas canvas, Size size) {
+    final cell = size.width < 640 ? 3.0 : 4.0;
+    final baseY = size.height - (cell * 12);
+
+    switch (background.pattern) {
+      case _BackdropPattern.dots:
+        _drawMeadowProps(canvas, size, cell, baseY);
+      case _BackdropPattern.sunsetLines:
+        _drawCampProps(canvas, size, cell, baseY);
+      case _BackdropPattern.cyberGrid:
+        _drawCyberProps(canvas, size, cell, baseY);
+      case _BackdropPattern.mountain:
+        _drawShrineProps(canvas, size, cell, baseY);
+      case _BackdropPattern.waves:
+        _drawOceanProps(canvas, size, cell, baseY);
+      case _BackdropPattern.runes:
+        _drawArchiveProps(canvas, size, cell, baseY);
+    }
+  }
+
+  void _drawMeadowProps(Canvas canvas, Size size, double cell, double y) {
+    _drawSprite(
+      canvas,
+      origin: Offset(size.width * 0.08, y),
+      cell: cell,
+      rows: const [
+        '..ggg..',
+        '.ggggg.',
+        'ggggggg',
+        '..ttt..',
+        '..ttt..',
+      ],
+      palette: const {
+        'g': Color(0xFF6FBF6B),
+        't': Color(0xFF3E6A3A),
+      },
+    );
+    _drawSprite(
+      canvas,
+      origin: Offset(size.width * 0.78, y + cell),
+      cell: cell,
+      rows: const [
+        '..gg..',
+        '.gffg.',
+        'ggffgg',
+        '..tt..',
+      ],
+      palette: const {
+        'g': Color(0xFF7ACB72),
+        'f': Color(0xFFFFD15E),
+        't': Color(0xFF3E6A3A),
+      },
+    );
+  }
+
+  void _drawCampProps(Canvas canvas, Size size, double cell, double y) {
+    _drawSprite(
+      canvas,
+      origin: Offset(size.width * 0.14, y + cell),
+      cell: cell,
+      rows: const [
+        '..ff..',
+        '.fyyf.',
+        '..yy..',
+        '.rrrr.',
+        'rrrrrr',
+      ],
+      palette: const {
+        'f': Color(0xFFFF6B3D),
+        'y': Color(0xFFFFD05A),
+        'r': Color(0xFF7A4A2E),
+      },
+    );
+    _drawSprite(
+      canvas,
+      origin: Offset(size.width * 0.78, y + cell * 2),
+      cell: cell,
+      rows: const [
+        'bbbbbb',
+        'bddddb',
+        'bddddb',
+        'bbbbbb',
+      ],
+      palette: const {
+        'b': Color(0xFF8F5A38),
+        'd': Color(0xFFC48853),
+      },
+    );
+  }
+
+  void _drawCyberProps(Canvas canvas, Size size, double cell, double y) {
+    _drawSprite(
+      canvas,
+      origin: Offset(size.width * 0.08, y - cell),
+      cell: cell,
+      rows: const [
+        '..nn..',
+        '.nccn.',
+        'nccccn',
+        'nccccn',
+        '.nccn.',
+        '..bb..',
+        '..bb..',
+      ],
+      palette: const {
+        'n': Color(0xFF1A3A58),
+        'c': Color(0xFF53E3FF),
+        'b': Color(0xFF2D5C7B),
+      },
+    );
+    _drawSprite(
+      canvas,
+      origin: Offset(size.width * 0.78, y - cell),
+      cell: cell,
+      rows: const [
+        '.nnnn.',
+        '.nlln.',
+        '.nlln.',
+        '.nlln.',
+        '.bbbb.',
+      ],
+      palette: const {
+        'n': Color(0xFF213A56),
+        'l': Color(0xFF7AF5FF),
+        'b': Color(0xFF3A5C7E),
+      },
+    );
+  }
+
+  void _drawShrineProps(Canvas canvas, Size size, double cell, double y) {
+    _drawSprite(
+      canvas,
+      origin: Offset(size.width * 0.1, y - cell * 2),
+      cell: cell,
+      rows: const [
+        '..ss..',
+        '.ssss.',
+        'ssssss',
+        'ssbbss',
+        'ssbbss',
+        'ssbbss',
+      ],
+      palette: const {
+        's': Color(0xFFCBD9F5),
+        'b': Color(0xFF8FA6D7),
+      },
+    );
+    _drawSprite(
+      canvas,
+      origin: Offset(size.width * 0.78, y - cell * 2),
+      cell: cell,
+      rows: const [
+        '..ss..',
+        '.ssss.',
+        'ssssss',
+        'ssbbss',
+        'ssbbss',
+        'ssbbss',
+      ],
+      palette: const {
+        's': Color(0xFFCBD9F5),
+        'b': Color(0xFF8FA6D7),
+      },
+    );
+  }
+
+  void _drawOceanProps(Canvas canvas, Size size, double cell, double y) {
+    _drawSprite(
+      canvas,
+      origin: Offset(size.width * 0.1, y + cell),
+      cell: cell,
+      rows: const [
+        '..cc..',
+        '.cccc.',
+        'ccmccc',
+        '.cmmc.',
+        '..cc..',
+      ],
+      palette: const {
+        'c': Color(0xFF51B8D9),
+        'm': Color(0xFF7DE2E9),
+      },
+    );
+    _drawSprite(
+      canvas,
+      origin: Offset(size.width * 0.76, y + cell),
+      cell: cell,
+      rows: const [
+        '.rrrr.',
+        'rrssrr',
+        '.rssr.',
+        '..bb..',
+        '..bb..',
+      ],
+      palette: const {
+        'r': Color(0xFF4E7993),
+        's': Color(0xFFA5DCEF),
+        'b': Color(0xFF2F5D75),
+      },
+    );
+  }
+
+  void _drawArchiveProps(Canvas canvas, Size size, double cell, double y) {
+    _drawSprite(
+      canvas,
+      origin: Offset(size.width * 0.09, y - cell),
+      cell: cell,
+      rows: const [
+        '..rr..',
+        '.rrrr.',
+        'rrssrr',
+        '.rssr.',
+        '..bb..',
+        '..bb..',
+      ],
+      palette: const {
+        'r': Color(0xFF6A7E92),
+        's': Color(0xFF9ED9CB),
+        'b': Color(0xFF3F4E67),
+      },
+    );
+    _drawSprite(
+      canvas,
+      origin: Offset(size.width * 0.78, y - cell),
+      cell: cell,
+      rows: const [
+        '..nn..',
+        '.nccn.',
+        'nccccn',
+        '.nccn.',
+        '..bb..',
+      ],
+      palette: const {
+        'n': Color(0xFF37435B),
+        'c': Color(0xFF8ED9C2),
+        'b': Color(0xFF2A3448),
+      },
+    );
+  }
+
+  void _drawSprite(
+    Canvas canvas, {
+    required Offset origin,
+    required double cell,
+    required List<String> rows,
+    required Map<String, Color> palette,
+  }) {
+    for (var y = 0; y < rows.length; y++) {
+      final row = rows[y];
+      for (var x = 0; x < row.length; x++) {
+        final symbol = row[x];
+        if (symbol == '.') continue;
+        final color = palette[symbol];
+        if (color == null) continue;
+        canvas.drawRect(
+          Rect.fromLTWH(origin.dx + (x * cell), origin.dy + (y * cell), cell, cell),
+          Paint()..color = color,
+        );
+      }
     }
   }
 
